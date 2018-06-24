@@ -1414,7 +1414,7 @@ vfs_s_retrieve_file (struct vfs_class *me, struct vfs_s_inode *ino)
     int handle;
     ssize_t n;
     off_t stat_size = ino->st.st_size;
-    vfs_file_handler_t *fh;
+    vfs_file_handler_t *fh = NULL;
     vfs_path_t *tmp_vpath;
     struct vfs_s_subclass *s = MEDATA;
 
@@ -1475,7 +1475,8 @@ vfs_s_retrieve_file (struct vfs_class *me, struct vfs_s_inode *ino)
     unlink (ino->localname);
   error_4:
     MC_PTR_FREE (ino->localname);
-    vfs_s_free_fh (s, fh);
+    if (fh != NULL)
+        vfs_s_free_fh (s, fh);
     return (-1);
 }
 
