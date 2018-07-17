@@ -1,3 +1,13 @@
+This is fork of official MC repository, which is a great tool for all file
+operations on linux console.
+
+Since I needed some custom features/improvements I created this fork. 
+Comparing to original mc following features are added: 
+
+- toggle command line with Ctrl-s (useful when you like using both 'search
+by type' feature and command line and need to switch mode with keyboard
+shortcut instead of menu)
+
 Contents
 --------
 

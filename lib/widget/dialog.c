@@ -45,6 +45,7 @@
 
 #include "lib/widget.h"
 #include "lib/widget/mouse.h"
+#include "src/filemanager/layout.h"
 
 /*** global variables ****************************************************************************/
 
@@ -469,6 +470,14 @@ dlg_key_event (WDialog * h, int d_key)
             dlg_select_prev_widget (h);
             return;
         }
+    }
+
+    if (d_key==16403) // ^s
+    {
+    	command_prompt=!command_prompt;
+    	layout_change();
+    	do_refresh();
+    	return;
     }
 
     /* first can dlg_callback handle the key */
