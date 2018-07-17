@@ -8,6 +8,11 @@ Comparing to original mc following features are added:
 by type' feature and command line and need to switch mode with keyboard
 shortcut instead of menu)
 
+Disclaimer: I'm aware that some of my code are very specific hacks and may
+not work on other configurations. Simply: as far as it works for me it is
+enough for me, and unfortunately I don't have enough time to write
+absolutely universal code.
+
 Contents
 --------
 
