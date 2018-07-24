@@ -857,7 +857,9 @@ format_file (WPanel * panel, int file_index, int width, int attr, gboolean issta
                     perm = 2;
             }
 
-            if (color >= 0)
+            if ((!strcmp(format->id,"size"))&&(fe)&&(fe->f.dir_size_computed))
+            	tty_lowlevel_setcolor(16); // TODO replace number with proper name
+            else if (color >= 0)
                 tty_setcolor (color);
             else
                 tty_lowlevel_setcolor (-color);
