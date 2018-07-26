@@ -7,6 +7,8 @@ Comparing to original mc following features are added:
 - toggle command line with Ctrl-s (useful when you like using both 'search
 by type' feature and command line and need to switch mode with keyboard
 shortcut instead of menu)
+- filter by type when command line is hidden
+- mark directories with computed size
 
 Disclaimer: I'm aware that some of my code are very specific hacks and may
 not work on other configurations. Simply: as far as it works for me it is
