@@ -994,7 +994,7 @@ display_mini_info (WPanel * panel)
 
     widget_move (w, panel_lines (panel) + 3, 1);
 
-    if (panel->searching)
+    if (panel->searching && !command_prompt)
     {
         tty_setcolor (INPUT_COLOR);
         tty_print_char ('/');
@@ -2671,6 +2671,8 @@ do_search (WPanel * panel, int c_code)
         }
     }
 
+    panel_reload(panel);
+
     reg_exp = g_strdup_printf ("%s*", panel->search_buffer);
     esc_str = strutils_escape (reg_exp, -1, ",|\\{}[]", TRUE);
     search = mc_search_new (esc_str, NULL);
@@ -2708,19 +2710,21 @@ do_search (WPanel * panel, int c_code)
             break;
         }
     }
-    if (is_found)
+    if (!is_found)
+    	sel=1;
+
     {
         unselect_item (panel);
         panel->selected = sel;
         select_item (panel);
         widget_redraw (WIDGET (panel));
     }
-    else if (c_code != KEY_BACKSPACE)
-    {
-        act = panel->search_buffer + l;
-        str_prev_noncomb_char (&act, panel->search_buffer);
-        act[0] = '\0';
-    }
+//    else if (c_code != KEY_BACKSPACE)
+//    {
+//        act = panel->search_buffer + l;
+//        str_prev_noncomb_char (&act, panel->search_buffer);
+//        act[0] = '\0';
+//    }
     mc_search_free (search);
     g_free (reg_exp);
     g_free (esc_str);
@@ -2772,15 +2776,22 @@ stop_search (WPanel * panel)
     if (panel->search_buffer[0] != '\0')
         g_strlcpy (panel->prev_search_buffer, panel->search_buffer,
                    sizeof (panel->prev_search_buffer));
+    if (panel->filter)
+    {
+    	g_free(panel->filter);
+    	panel->filter=NULL;
+//    	sprintf(panel->filter,"*");
+    }
 
     display_mini_info (panel);
+    panel_reload(panel);
 }
 
 /* --------------------------------------------------------------------------------------------- */
 /** Return TRUE if the Enter key has been processed, FALSE otherwise */
 
 static gboolean
-do_enter_on_file_entry (file_entry_t * fe)
+do_enter_on_file_entry (file_entry_t * fe, void *panel)
 {
     vfs_path_t *full_name_vpath;
     gboolean ok;
@@ -2797,6 +2808,7 @@ do_enter_on_file_entry (file_entry_t * fe)
         if (!do_cd (fname_vpath, cd_exact))
             message (D_ERROR, MSG_ERROR, _("Cannot change directory"));
         vfs_path_free (fname_vpath);
+        stop_search(panel);
         return TRUE;
     }
 
@@ -2858,7 +2870,7 @@ do_enter_on_file_entry (file_entry_t * fe)
 static inline gboolean
 do_enter (WPanel * panel)
 {
-    return do_enter_on_file_entry (selection (panel));
+    return do_enter_on_file_entry (selection (panel),panel);
 }
 
 
@@ -2902,7 +2914,7 @@ chdir_other_panel (WPanel * panel)
         try_to_select (current_panel, sel_entry);
     change_panel ();
 
-    move_down (panel);
+//    move_down (panel);
 }
 
 /* --------------------------------------------------------------------------------------------- */
@@ -2974,12 +2986,12 @@ chdir_to_readlink (WPanel * panel)
     else
         new_dir_vpath = vfs_path_append_new (panel->cwd_vpath, buffer, (char *) NULL);
 
-    change_panel ();
+//    change_panel ();
     do_cd (new_dir_vpath, cd_exact);
     vfs_path_free (new_dir_vpath);
-    change_panel ();
+//    change_panel ();
 
-    move_down (panel);
+//    move_down (panel);
 }
 
 /* --------------------------------------------------------------------------------------------- */
@@ -3308,7 +3320,7 @@ _do_panel_cd (WPanel * panel, const vfs_path_t * new_dir_vpath, enum cd_enum cd_
     panel_clean_dir (panel);
 
     dir_list_load (&panel->dir, panel->cwd_vpath, panel->sort_field->sort_routine,
-                   &panel->sort_info, panel->filter);
+                   &panel->sort_info, panel->filter,panel);
     try_to_select (panel, get_parent_dir_name (panel->cwd_vpath, olddir_vpath));
 
     load_hint (FALSE);
@@ -3429,8 +3441,8 @@ panel_execute_cmd (WPanel * panel, long command)
 {
     int res = MSG_HANDLED;
 
-    if (command != CK_Search)
-        stop_search (panel);
+//    if (command != CK_Search)
+//        stop_search (panel);
 
     switch (command)
     {
@@ -3621,7 +3633,7 @@ panel_key (WPanel * panel, int key)
         return MSG_HANDLED;
     }
 
-    if (panel->searching && ((key >= ' ' && key <= 255) || key == KEY_BACKSPACE))
+    if (!command_prompt && panel->searching && ((key >= ' ' && key <= 255) || key == KEY_BACKSPACE))
     {
         do_search (panel, key);
         return MSG_HANDLED;
@@ -3703,7 +3715,7 @@ panel_callback (Widget * w, Widget * sender, widget_msg_t msg, int parm, void *d
 
     case MSG_UNFOCUS:
         /* Janne: look at this for the multiple panel options */
-        stop_search (panel);
+//        stop_search (panel);
         panel->active = 0;
         unselect_item (panel);
         return MSG_HANDLED;
@@ -4379,7 +4391,7 @@ panel_new_with_dir (const char *panel_name, const vfs_path_t * vpath)
 
     /* Load the default format */
     dir_list_load (&panel->dir, panel->cwd_vpath, panel->sort_field->sort_routine,
-                   &panel->sort_info, panel->filter);
+                   &panel->sort_info, panel->filter,panel);
 
     /* Restore old right path */
     if (curdir != NULL)
@@ -4424,7 +4436,7 @@ panel_reload (WPanel * panel)
     show_dir (panel);
 
     dir_list_reload (&panel->dir, panel->cwd_vpath, panel->sort_field->sort_routine,
-                     &panel->sort_info, panel->filter);
+                     &panel->sort_info, panel->filter,panel);
 
     panel->dirty = 1;
     if (panel->selected >= panel->dir.len)

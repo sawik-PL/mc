@@ -443,7 +443,7 @@ mc_search (const gchar * pattern, const gchar * pattern_charset, const gchar * s
         return FALSE;
 
     search->search_type = type;
-    search->is_case_sensitive = TRUE;
+    search->is_case_sensitive = FALSE;
 
     if (type == MC_SEARCH_T_GLOB)
         search->is_entire_line = TRUE;

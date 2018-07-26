@@ -147,8 +147,8 @@ clean_sort_keys (dir_list * list, int start, int count)
  */
 
 static gboolean
-handle_dirent (struct dirent *dp, const char *fltr, struct stat *buf1, int *link_to_dir,
-               int *stale_link)
+handle_dirent (struct dirent *dp, char *fltr, struct stat *buf1, int *link_to_dir,
+               int *stale_link, WPanel * panel)
 {
     vfs_path_t *vpath;
     gboolean stale;
@@ -180,7 +180,18 @@ handle_dirent (struct dirent *dp, const char *fltr, struct stat *buf1, int *link
 
     vfs_path_free (vpath);
 
-    return (S_ISDIR (buf1->st_mode) || *link_to_dir != 0 || fltr == NULL
+    if (panel->searching)
+    {
+    	if (!fltr)
+    		fltr=g_malloc(MC_MAXFILENAMELEN);
+    	if (fltr)
+    	{
+    		sprintf(fltr,"*%s*",panel->search_buffer);
+    		panel->filter=fltr;
+    	}
+    }
+
+    return (/*S_ISDIR (buf1->st_mode) || *link_to_dir != 0 ||*/ fltr == NULL
             || mc_search (fltr, NULL, dp->d_name, MC_SEARCH_T_GLOB));
 }
 
@@ -615,7 +626,7 @@ handle_path (const char *path, struct stat * buf1, int *link_to_dir, int *stale_
 
 void
 dir_list_load (dir_list * list, const vfs_path_t * vpath, GCompareFunc sort,
-               const dir_sort_options_t * sort_op, const char *fltr)
+               const dir_sort_options_t * sort_op, const char *fltr, void *panel)
 {
     DIR *dirp;
     struct dirent *dp;
@@ -648,7 +659,7 @@ dir_list_load (dir_list * list, const vfs_path_t * vpath, GCompareFunc sort,
 
     while ((dp = mc_readdir (dirp)) != NULL)
     {
-        if (!handle_dirent (dp, fltr, &st, &link_to_dir, &stale_link))
+        if (!handle_dirent (dp, fltr, &st, &link_to_dir, &stale_link,panel))
             continue;
 
         if (!dir_list_append (list, dp->d_name, &st, link_to_dir != 0, stale_link != 0))
@@ -683,7 +694,7 @@ if_link_is_exe (const vfs_path_t * full_name_vpath, const file_entry_t * file)
 
 void
 dir_list_reload (dir_list * list, const vfs_path_t * vpath, GCompareFunc sort,
-                 const dir_sort_options_t * sort_op, const char *fltr)
+                 const dir_sort_options_t * sort_op, const char *fltr, void *panel)
 {
     DIR *dirp;
     struct dirent *dp;
@@ -761,7 +772,7 @@ dir_list_reload (dir_list * list, const vfs_path_t * vpath, GCompareFunc sort,
     {
         file_entry_t *fentry;
 
-        if (!handle_dirent (dp, fltr, &st, &link_to_dir, &stale_link))
+        if (!handle_dirent (dp, fltr, &st, &link_to_dir, &stale_link,panel))
             continue;
 
         if (!dir_list_append (list, dp->d_name, &st, link_to_dir != 0, stale_link != 0))
