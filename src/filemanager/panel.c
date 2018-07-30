@@ -2692,7 +2692,7 @@ do_search (WPanel * panel, int c_code)
         break;
     }
 
-    sel = panel->selected;
+    sel = 0;
 
     for (i = panel->selected; !wrapped || i != panel->selected; i++)
     {
